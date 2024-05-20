@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- title and description -->
+    <title>API Documentação</title>
+    <!-- Apple Icon when save to phone -->
+    <link rel="apple-touch-icon" href="./assets/icon.png" />
+    <!-- favicon -->
+    <link rel="icon" href="./assets/icon.png" type="image/png" />
+    <!-- styles -->
+    <link rel="stylesheet" href="./styles/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <nav>
+      <img src="./assets/icon.png" alt="logo" />
+      <ul>
+        <li><a href="#intro">Introdução</a></li>
+        <li><a href="#auth">Autenticação</a></li>
+        <li><a href="#stripe">Pagamentos</a></li>
+        <li><a href="#prods">Produtos</a></li>
+        <li><a href="#cats">Categorias</a></li>
+        <li><a href="#accs">Contas</a></li>
+        <li><a href="#carts">Carrinho</a></li>
+        <li><a href="#orders">Encomendas</a></li>
+      </ul>
+    </nav>
+    <main>
+      <section id="intro">
+        <h1>Documentação API</h1>
+        <p>
+          Esta documentação descreve os endpoints e o seu retorno na API da Loja Online. Algumas das
+          rotas são protegidas, por isso é necessário autenticar-se com um token de acesso.<br />Para
+          informações legais, consulte os <a href="/service-terms.html">Termos de Serviço</a> e a
+          <a href="/privacy-policy.html">Política de Privacidade</a>.
+        </p>
+      </section>
+      <section id="auth">
+        <h2>Autenticação</h2>
+        <p>
+          Para aceder aos endpoints protegidos, é necessário autenticar-se com um token de acesso.
+        </p>
+        <br />
+        <h3>POST /accounts/login</h3>
+        <p>
+          Autentica um utilizador e devolve um <code>token</code> de acesso e o <code>id</code> da
+          conta utilizada.
+        </p>
+        <p>
+          A palavra passe é encriptada utilizando a biblioteca <code>brypt</code>. O token enviado
+          tem validade de 30 dias.
+        </p>
+        <h4>Body</h4>
+        <pre>
+{ 
+  "email": "exemplo@email.com",
+  "password": "password123"
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se os dados tiverem <b>corretos</b> este endepoint retorna o objeto abaixo:</p>
+        <pre>
+{
+  "token": "eyJhb...yMzUw",
+  "accID": "60f...c3"
+}
+</pre
+        >
+        <p>
+          Se os dados estiverem <b>incorretos</b>, o endpoint retorna um <b>erro 401</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'O dados de início de sessão estão incorretos!' }</code>
+        <hr />
+        <h3>GET /accounts/token</h3>
+        <p>Devolve o accounts da conta através do token de acesso.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se a conta <b>existir</b>, o endpoint retorna o objeto com a conta:</p>
+        <pre>
+{
+  "token": "eyJhb...",
+  "accID": "60f...c3"
+}</pre
+        >
+        <p>Se o token <b>não existir</b>, o endpoint retorna um <b>erro 401</b> e uma mensagem:</p>
+        <code>{ message: 'O token não foi enviado!' }</code>
+        <p>
+          Se o JWT Secret <b>não existir</b>, o endpoint retorna um <b>erro 500</b> e uma mensagem:
+        </p>
+        <code>{ message: 'O JWT secret não foi enviado!' }</code>
+        <p>Se o token for <b>inválido</b>, o endpoint retorna um <b>erro 403</b> e uma mensagem:</p>
+        <code>{ message: 'Existiu um erro na verificação do token:' + error }</code>
+        <hr />
+        <h3>POST /accounts/reset-pw</h3>
+        <p>Envia um email para redifinição de palavra passe.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "email": "exemplo@email.com"
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se o email for <b>enviado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Email enviado com sucesso!' }</code>
+        <p>
+          Se o email do cliente <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+      </section>
+      <section id="stripe">
+        <h2>Pagamentos</h2>
+        <p>Endpoints para processar pagamentos com Stripe.</p>
+        <br />
+        <h3>GET /stripe/retrieve-payment-id</h3>
+        <p>Este endpoint é utilizado para obter o paymentId para o pagamento.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se existir <code>sessionId</code>, o endpoint retorna o objeto abaixo:</p>
+        <pre>
+{
+  "paymentId": "pi_1J...3"
+}
+</pre
+        >
+        <p>Caso contrário, o endpoint retorna um <b>erro 400</b> e uma mensagem:</p>
+        <code>{ error: 'Não existe session ID' }</code>
+        <hr />
+        <h3>POST /stripe/create-checkout-session</h3>
+        <p>Este endpoint é utilizado para criar um pagamento com Stripe.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "amount": 1000,
+  "orderInfo": {
+    "contactInfo": "exemplo@email.com",
+    "firstName": "Primeiro",
+    "lastName": "Último",
+    "street": "Rua do Exemplo",
+    "addressExtra": "Ap 1",
+    "postalCode": "1234-567",
+    "city": "Exemplo",
+    "country": "Portugal"
+    "nif": "123456789" <code>*Campo Opcional</code>
+  }
+}
+</pre>
+        <h4>Resposta</h4>
+        <p>Se a sessão for <b>criada</b>, o endpoint retorna o objeto abaixo:</p>
+        <pre>
+{
+  "session": {
+    "payment_method_types": ["card"],
+    "line_items": [
+      {
+        "price_data": {
+          "currency": "eur",
+          "product_data": {
+            "name": "Produto",
+          },
+          "unit_amount": 1000
+        },
+        "quantity": 1
+      }
+    ],
+    "mode": "payment",
+    "success_url": "${domain}/successful-payment?hash=4389236587543",
+    "cancel_url": "${domain}/unsuccessful-payment",
+    "expand": ["payment_intent"],
+  }
+}
+</pre
+        >
+        <p>
+          Se a sessão <b>não for criada</b>, o endpoint retorna um <b>erro 500</b> e uma mensagem:
+        </p>
+        <code>{ error: 'Ocorreu um erro ao criar a sessão de pagamento!' }</code>
+      </section>
+      <section id="prods">
+        <h2>Produtos</h2>
+        <p>
+          Endpoints para gerir produtos na plataforma. É de ter em atenção que cada produto tem um
+          ID, tamanho e stock únicos.
+        </p>
+        <br />
+        <h3>GET /products</h3>
+        <p>Devolve uma lista de produtos.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se existirem produtos, o endpoint retorna um array de objetos com os produtos:</p>
+        <pre>
+[
+  {
+    "id": "60f...c3",
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 10,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]
+</pre
+        >
+        <p>
+          Se não existirem produtos, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /products/:id</h3>
+        <p>Devolve um produto específico.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se o produto <b>existir</b>, o endpoint retorna o objeto com o produto:</p>
+        <pre>
+{
+  "id": "60f...c3",
+  "reference": "RTG4",
+  "name": "Produto",
+  "description": "Descrição do produto",
+  "price": 1000,
+  "size": "M",
+  "stock": 10,
+  "category": "60f...t7",
+  "image": "https://exemplo.com/imagem.jpg",
+  "active": true,
+  "createdAt": "2021-07-23T15:00:00.000Z",
+}</pre
+        >
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+        <hr />
+        <h3>GET /products/allByReference</h3>
+        <p>Devolve uma lista de produtos ordenados por referência.</p>
+        <h4>Resposta</h4>
+        <p>Se existirem produtos, o endpoint retorna um array de objetos com os produtos:</p>
+        <pre>
+[
+  {
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 100,
+    "category": "Calças",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "stock": [
+      {
+        "size": "S",
+        "stock": 10
+      },
+      {
+        "size": "M",
+        "stock": 5
+      }
+    ]
+  },
+  ...
+]</pre
+        >
+        <p>
+          Se não existirem produtos, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /products/reference/:reference</h3>
+        <p>Devolve todos os produtos <b>ativos</b> por referência.</p>
+        <h4>Resposta</h4>
+        <p>Se o produto <b>existir</b>, o endpoint retorna o objeto com o produto:</p>
+        <pre>
+[
+  {
+    "id": "60f...c3",
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 10,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]</pre
+        >
+        <p>
+          Se o produto <b>não existir</b>, o endpoint <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /products/category/:category</h3>
+        <p>Devolve todos os produtos <b>ativos</b> por categoria.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se existirem <b>produtos</b>, o endpoint retorna um array de objetos com os produtos por
+          referência de cada categoria:
+        </p>
+        <pre>
+[
+  {
+    "_id": "60f...c3",
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 100,
+    "size": "M",
+    "stock": 10,
+    "category": "60f...t7",
+    "categoryString": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]</pre
+        >
+        <p>
+          Se não existirem produtos, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /products/search?searchTerm=Produto</h3>
+        <p>Devolve todos os produtos <b>ativos</b> que correspondem à pesquisa.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se existirem <b>produtos</b>, o endpoint retorna um array de objetos com os produtos por
+          referência:
+        </p>
+        <pre>
+[
+  {
+    "id": "60f...c3",
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 10,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]</pre
+        >
+        <p>Se não existirem <b>produtos</b>, o endpoint retorna <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Não foram encontrados produtos!' }</code>
+        <hr />
+        <h3>GET /products/search/:reference</h3>
+        <p>Devolve todos os produtos <b>ativos</b> que correspondem à pesquisa por referência.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se existirem <b>produtos</b>, o endpoint retorna um array de objetos com os produtos por
+          referência:
+        </p>
+        <pre>
+[
+  {
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 100,
+    "category": "Calças",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "stock": [
+      {
+        "size": "S",
+        "stock": 10
+      },
+      {
+        "size": "M",
+        "stock": 5
+      }
+    ]
+  },
+  ...
+]</pre
+        >
+        <p>
+          Se não existirem <b>produtos</b>, o endpoint <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /products/lastFour</h3>
+        <p>Devolve os últimos quatro produtos <b>ativos</b> adicionados.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se existirem <b>produtos</b>, o endpoint retorna um array de objetos com os produtos por
+          referência:
+        </p>
+        <pre>
+[
+  {
+    "id": "60f...c3",
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 10,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]</pre
+        >
+        <p>
+          Se não existirem <b>produtos</b>, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /products/stock</h3>
+        <p>Recebe uma referencia e um tamanho e retorna o stock do mesmo.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "reference": "RTG4",
+  "size": "M"
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se existir <b>stock</b>, o endpoint retorna o objeto abaixo com o stock do produto:</p>
+        <pre>
+{
+  "stock": 10
+}
+</pre
+        >
+        <p>
+          Se não existir produto com o tamanho indicado, o endpoint retorna um <b>erro 404</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'Não existem tamanhos para a referência indicada!' }</code>
+        <h3>POST /products</h3>
+        <p>Adiciona um novo produto.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "reference": "RTG4",
+  "name": "Produto",
+  "description": "Descrição do produto",
+  "price": 1000,
+  "size": "M",
+  "stock": 10,
+  "category": "Calças"
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se o produto for <b>adicionado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Produto adicionado com sucesso!' }</code>
+        <p>Se o produto <b>já existir</b>, o endpoint retorna um <b>erro 409</b> e uma mensagem:</p>
+        <code
+          >{ message: `Product with reference '${reference}' and size '${size}' already
+          exists`}</code
+        >
+        <p>
+          Se algum dado for introduzido <b>incorretamente</b>, o endpoint retorna um
+          <b>erro 409</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Categoria não encontrada!' }</code>
+        <p>ou</p>
+        <code>{ message: 'Tamanho inválido. Os tamanhos permitidos são XS, S, M, L e XL'}</code>
+        <hr />
+        <h3>PUT /products/reference/:reference</h3>
+        <p>Atualiza um produto existente.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "reference": "RTG4",
+  "name": "Produto",
+  "description": "Descrição do produto",
+  "price": 1000,
+  "category": "Calças"
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se o produto for <b>atualizado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Produto atualizado com sucesso!' }</code>
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+        <p>
+          Se a categoria <b>não existir</b>, o endpoint retorna um <b>erro 400</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Categoria não encontrada!' }</code>
+        <hr />
+        <h3>PUT /products/stock</h3>
+        <p>Atualiza o stock de um produto existente.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "reference": "RTG4",
+  "size": "M",
+  "stock": 10
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se o stock for <b>atualizado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Stock atualizado com sucesso!' }</code>
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+        <h3>PUT /products/image/:reference</h3>
+        <p>Atualiza a imagem de um produto existente.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>File</h4>
+        <p>Envie a imagem do produto no formato <code>multipart/form-data</code>.</p>
+        <h4>Resposta</h4>
+        <p>Se a imagem for <b>atualizada</b>, o endpoint retorna os produtos da sua referencia:</p>
+        <pre>
+[
+  {
+    "id": "60f...c3",
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 10,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+]
+</pre
+        >
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+        <p>
+          Se tiver <b>problemas com imagem</b>, o endpoint retorna um <b>erro 400</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'Erro ao ler a imagem.' }</code>
+        <hr />
+        <h3>PUT /products/hide/:reference</h3>
+        <p>Esconde um produto da loja.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se o produto for <b>escondido</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Produto escondido com sucesso!' }</code>
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+        <hr />
+        <h3>PUT /products/show/:reference</h3>
+        <p>Mostra um produto na loja.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se o produto for <b>mostrado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Produto mostrado com sucesso!' }</code>
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+        <hr />
+        <h3>DELETE /products/:id</h3>
+        <p>Remove um produto existente.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se o produto for <b>removido</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Produto removido com sucesso!' }</code>
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produto não encontrado!' }</code>
+      </section>
+      <section id="cats">
+        <h2>Categorias</h2>
+        <p>Endpoints para gerir categorias de produtos.</p>
+        <br />
+        <h3>GET /categories</h3>
+        <p>Devolve uma lista de todas as categorias.</p>
+        <h4>Resposta</h4>
+        <p>Se existirem categorias, o endpoint retorna um array de objetos com as categorias:</p>
+        <pre>
+[
+  {
+    "id": "60f...t7",
+    "description": "Calças",
+  },
+  ...
+]
+</pre
+        >
+        <p>
+          Se não existirem categorias, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /categories/:id</h3>
+        <p>Devolve uma categoria específica.</p>
+        <h4>Resposta</h4>
+        <p>Se a categoria <b>existir</b>, o endpoint retorna o objeto com a categoria:</p>
+        <pre>
+{
+  "id": "60f...t7",
+  "description": "Calças",
+}</pre
+        >
+        <p>
+          Se a categoria <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Categoria não encontrada!' }</code>
+        <hr />
+        <h3>GET /categories/description/:description</h3>
+        <p>Devolve uma categoria específica por descrição.</p>
+        <h4>Resposta</h4>
+        <p>Se a categoria <b>existir</b>, o endpoint retorna o objeto com a categoria:</p>
+        <pre>
+{
+  "id": "60f...t7",
+  "description": "Calças",
+}</pre
+        >
+        <p>
+          Se a categoria <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Categoria não encontrada!' }</code>
+        <hr />
+        <h3>POST /categories</h3>
+        <p>Adiciona uma nova categoria.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "description": "Calças",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se a categoria for <b>adicionada</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Categoria adicionada com sucesso!' }</code>
+        <p>
+          Se a categoria <b>já existir</b>, o endpoint retorna um <b>erro 409</b> e uma mensagem:
+        </p>
+        <code>{ message: 'A categoria já existe!' }</code>
+        <hr />
+        <h3>PUT /categories/:id</h3>
+        <p>Atualiza uma categoria existente.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "description": "Calças",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se a categoria for <b>atualizada</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Categoria atualizada com sucesso!' }</code>
+        <p>
+          Se a categoria <b>já existir</b>, o endpoint retorna um <b>erro 400</b> e uma mensagem:
+        </p>
+        <code>{ message: 'A categoria já existe!' }</code>
+        <hr />
+        <h3>DELETE categories/:id</h3>
+        <p>Remove uma categoria existente.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se a categoria for <b>removida</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Categoria removida com sucesso!' }</code>
+        <p>
+          Se a categoria <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Categoria não encontrada!' }</code>
+      </section>
+      <section id="accs">
+        <h2>Contas</h2>
+        <p>Endpoints para gerir contas de utilizador.</p>
+        <br />
+        <h3>GET /accounts</h3>
+        <p>Devolve uma lista de todas as contas.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se existirem contas, o endpoint retorna um array de objetos com as contas:</p>
+        <pre>
+[
+  {
+    "id": "60f...c3",
+    "firstName": "Primeiro",
+    "lastName": "Último",
+    "email": "exemplo@email.com",
+    "password": "$2b$10$...",
+    "phone": "912345678",
+    "nif": "123456789",
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]
+</pre
+        >
+        <p>
+          Se não existirem contas, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /accounts/:id</h3>
+        <p>Devolve uma conta específica.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se a conta <b>existir</b>, o endpoint retorna o objeto com a conta:</p>
+        <pre>
+{
+  "id": "60f...c3",
+  "firstName": "Primeiro",
+  "lastName": "Último",
+  "email": "exemplo@email.com"
+  "password": "$2b$10$...",
+  "phone": "912345678",
+  "nif": "123456789",
+  "createdAt": "2021-07-23T15:00:00.000Z",
+}</pre
+        >
+        <p>Se a conta <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+        <hr />
+        <h3>GET /accounts/verify-token/:token</h3>
+        <p>Verifica se o token de recuperação de palavra passe é válido.</p>
+        <h4>Resposta</h4>
+        <p>Se o token for <b>válido</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Token válido' }</code>
+        <p>Se o token for <b>inválido</b>, o endpoint retorna um <b>erro 403</b> e uma mensagem:</p>
+        <code>{ message: 'Token expirado' }</code>
+        <p>Se o token for <b>inválido</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+        <hr />
+        <h3>POST /accounts/register</h3>
+        <p>Regista um novo utilizador e retorna uma mensagem de sucesso.</p>
+        <h4>Body</h4>
+        <p>
+          Não precisa de fazer verificações dos dados do utilizador no <code>Frontend</code>, esta é
+          feita nesta função.
+        </p>
+        <pre>
+{
+  "firstName": "Primeiro",
+  "lastName": "Último",
+  "email": "exemplo@email.com",
+  "password": "password123",
+  "phone": "912345678",
+  "nif": "123456789"
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se os dados tiverem <b>corretos</b> este endepoint retorna o objeto abaixo:</p>
+        <code> { "message": "Conta registada com sucesso!" } </code>
+        <p>
+          Se os dados estiverem <b>vazios</b>, o endpoint retorna um <b>erro 406</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Ocorreu um erro ao registar o utilizador!' }</code>
+        <p>
+          Se o email ou nif <b>já existirem</b>, o endpoint retorna um <b>erro 409</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'O email já se encontra registado!' }</code>
+        <hr />
+        <h3>PUT /accounts/:id</h3>
+        <p>Atualiza uma conta existente.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "firstName": "Primeiro",
+  "lastName": "Último",
+  "phone": "912345678",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se a conta for <b>atualizada</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Conta atualizada com sucesso!' }</code>
+        <p>Se a conta <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+        <hr />
+        <h3>PUT /accounts/update-pw/:token</h3>
+        <p>Atualiza a palavra passe de uma conta existente.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "password": "password123",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se a palavra passe for <b>atualizada</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Palavra passe atualizada com sucesso!' }</code>
+        <p>Se a conta <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+        <hr />
+        <h3>DELETE /accounts/:id</h3>
+        <p>Remove uma conta existente.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se a conta for <b>removida</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Conta removida com sucesso!' }</code>
+        <p>Se a conta <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+      </section>
+      <section id="carts">
+        <h2>Carrinho</h2>
+        <p>Endpoints para gerir o carrinho de compras.</p>
+        <br />
+        <h3>GET /cart</h3>
+        <p>Devolve o conteúdo do carrinho. Cada carrinho tem apenas um produto.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se <b>existirem</b> carrinhos, o endpoint retorna um array de objetos com os carrinhos:
+        </p>
+        <pre>
+[
+  {
+    "productReference": "RTG4",
+    "name": "Produto",
+    "price": 1000,
+    "size": "M",
+    "quantity": 1,
+    "image": "https://exemplo.com/imagem.jpg",
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]
+</pre
+        >
+        <p>
+          Se <b>não existirem</b> carrinhos, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <p>
+          Se o utilizador <b>não estiver autenticado</b>, o endpoint retorna um <b>erro 404</b> e
+          uma mensagem:
+        </p>
+        <code>{ message: 'Carrinho não encontrado!' }</code>
+        <hr />
+        <h3>GET /cart/organized</h3>
+        <p>
+          Devolve o conteúdo do carrinho organizado por id. Serve para garantir que os carrinhos são
+          recebidos sempre da mesma forma.
+        </p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se <b>existirem</b> carrinhos, o endpoint retorna um array de objetos com os carrinhos
+          organizados por referência:
+        </p>
+        <pre>
+[
+  {
+    "reference": "RTG4",
+    "name": "Produto",
+    "price": 1000,
+    "image": "https://exemplo.com/imagem.jpg",
+    "quantity": 1,
+    "size": "M",
+  },
+  ...
+]
+</pre
+        >
+        <p>
+          Se <b>não existirem</b> carrinhos, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <p>
+          Se o utilizador <b>não estiver autenticado</b>, o endpoint retorna um <b>erro 404</b> e
+          uma mensagem:
+        </p>
+        <code>{ message: 'Carrinho não encontrado!' }</code>
+        <hr />
+        <h3>POST /cart</h3>
+        <p>Adiciona um produto ao carrinho.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+[
+  {
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 1,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  }
+]
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>
+          Se o produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Produtos não enviados!' }</code>
+        <p>
+          Se o tamanho do produto <b>for inválido</b>, o endpoint retorna um <b>erro 400</b> e uma
+          mensagem:
+        </p>
+        <code
+          >{ message: 'Tamanho inválido do produto ${productReference}. Os tamanhos permitidos são
+          XS, S, M, L e XL.' }</code
+        >
+        <p>
+          Se a referença do produto <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma
+          mensagem:
+        </p>
+        <code
+          >{ message: 'Produto com a referência '${productReference}' e tamanho '${size}' não
+          existe!' }</code
+        >
+        <p>
+          Se algum campo do produto <b>estiver vazio</b>, o endpoint retorna um <b>erro 400</b> e
+          uma mensagem:
+        </p>
+        <code>{ message: 'Existem campos não preenchidos!' }</code>
+        <p>
+          Se o produto <b>já existir</b>, o endpoint <b>atualiza a quantidade</b> e envia uma
+          mensagem:
+        </p>
+        <code>{ message: 'Quantidade do produto atualizada!' }</code>
+        <p>Para cada produto <b>adicionado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Produto adicionado ao carrinho com sucesso!' }</code>
+        <hr />
+        <h3>PUT /cart</h3>
+        <p>Atualiza a quantidade de um produto no carrinho.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "item": {
+    "reference": "RTG4",
+    "name": "Produto",
+    "description": "Descrição do produto",
+    "price": 1000,
+    "size": "M",
+    "stock": 1,
+    "category": "60f...t7",
+    "image": "https://exemplo.com/imagem.jpg",
+    "active": true,
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  "quantity": 2
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>
+          Se o carrinho <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Carrinho não encontrado!' }</code>
+        <p>
+          Se a quantidade do produto <b>for atualizada</b>, o endpoint retorna a mensagem abaixo:
+        </p>
+        <code>{ message: 'Quantidade do produto atualizada!' }</code>
+        <h3>DELETE /cart/:id</h3>
+        <p>Remove um carrinho quando a encomenda é criada.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se o carrinho <b>for removido</b>, o endpoint retorna a mensagem abaixo e o carrinho
+          removido:
+        </p>
+        <code>{ "message": "Carrinho removido com sucesso!" }</code>
+        <p>
+          Se o carrinho <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Carrinho não encontrado!' }</code>
+      </section>
+      <section id="orders">
+        <h2>Encomendas</h2>
+        <p>Endpoints para gerir encomendas de produtos.</p>
+        <br />
+        <h3>GET /orders</h3>
+        <p>Devolve uma lista de encomendas.</p>
+        <h3>POST /orders</h3>
+        <p>Regista uma nova encomenda.</p>
+        <h3>PUT /orders/:id</h3>
+        <p>Atualiza o estado de uma encomenda.</p>
+        <h3>DELETE /orders/:id</h3>
+        <p>Remove uma encomenda existente.</p>
+      </section>
+    </main>
+  </body>
+</html>
