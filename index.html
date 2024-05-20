@@ -1025,13 +1025,423 @@
         <p>Endpoints para gerir encomendas de produtos.</p>
         <br />
         <h3>GET /orders</h3>
-        <p>Devolve uma lista de encomendas.</p>
+        <p>Devolve uma lista de todas encomendas.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se existirem encomendas, o endpoint retorna um array de objetos com todas as encomendas:
+        </p>
+        <pre>
+[
+  {
+    "accountId": "60f...c3",
+    "contactInfo": "912345678",
+    "firstName": "Primeiro",
+    "lastName": "Último",
+    "address": {
+      "street": "Rua",
+      "addressExtra": "Apartamento 1",
+      "city": "Cidade",
+      "postalCode": "1234-567",
+      "country": "País",
+    },
+    "paymentId": "123456789",
+    "nif": "123456789",
+    "status": [
+      {
+        "status": "Pago",
+        "date": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+    "total": 1000,
+    "pdfUrl": "https://exemplo.com/fatura.pdf",
+    "createdAt": "2021-07-23T15:00:00.000Z",
+  },
+  ...
+]
+</pre
+        >
+        <p>
+          Se não existirem encomendas, o endpoint retorna <b>não retorna erro</b> e retorna um
+          <b>array vazio</b>:
+        </p>
+        <pre>[]</pre>
+        <hr />
+        <h3>GET /orders/:id</h3>
+        <p>Devolve uma encomenda específica.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>Se a encomenda <b>existir</b>, o endpoint retorna o objeto com a encomenda:</p>
+        <pre>
+{
+  "contactInfo": "912345678",
+  "firstName": "Primeiro",
+  "lastName": "Último",
+  "address": {
+    "street": "Rua",
+    "addressExtra": "Apartamento 1",
+    "city": "Cidade",
+    "postalCode": "1234-567",
+    "country": "País",
+  },
+  "nif": "123456789",
+  "status": [
+    {
+      "status": "Pago",
+      "date": "2021-07-23T15:00:00.000Z",
+    },
+  ],
+  "total": 1000,
+  "pdfUrl": "https://exemplo.com/fatura.pdf",
+  "createdAt": "2021-07-23T15:00:00.000Z",
+  "orderData": [
+    {
+      "reference": "RTG4",
+      "name": "Produto",
+      "description": "Descrição do produto",
+      "category": "Calças",
+      "quantity": 1,
+      "priceAtTime": 1000,
+      "size": "M",
+      "image": "https://exemplo.com/imagem.jpg",
+      "createdAt": "2021-07-23T15:00:00.000Z",
+    },
+  ],
+}</pre
+        >
+        <p>
+          Se a encomenda <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomenda não encontrada!' }</code>
+        <hr />
+        <h3>GET /orders/orders</h3>
+        <p>Devolve uma lista de todas as encomendas com os produtos.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <pre>
+[
+  {
+    "accountId": "60f...c3",
+    "contactInfo": "912345678",
+    "firstName": "Primeiro",
+    "lastName": "Último",
+    "address": {
+      "street": "Rua",
+      "addressExtra": "Apartamento 1",
+      "city": "Cidade",
+      "postalCode": "1234-567",
+      "country": "País",
+    },
+    "nif": "123456789",
+    "paymentId": "123456789",
+    "status": [
+      {
+        "status": "Pago",
+        "date": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+    "total": 1000,
+    "pdfUrl": "https://exemplo.com/fatura.pdf",
+    "createdAt": "2021-07-23T15:00:00.000Z",
+    "orderData": [
+      {
+        "reference": "RTG4",
+        "name": "Produto",
+        "description": "Descrição do produto",
+        "category": "Calças",
+        "quantity": 1,
+        "priceAtTime": 1000,
+        "size": "M",
+        "image": "https://exemplo.com/imagem.jpg",
+        "createdAt": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+  },
+]</pre
+        >
+        <p>
+          Se <b>não existirem</b> encomendas, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomendas não encontradas!' }</code>
+        <p>
+          Se <b>não existirem</b> produtos associados à encomenda selecionada, o endpoint retorna um
+          <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'A encomenda não tem produtos associados!' }</code>
+        <hr />
+        <h3>GET /orders/verify-orders/:id</h3>
+        <p>Encontra uma encomenda por <code>id</code> e por <code>id de conta</code>.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se a encomenda <b>existir</b>, o endpoint retorna o objeto com a encomenda e os produtos:
+        </p>
+        <pre>
+{
+  "accountId": "60f...c3",
+  "contactInfo": "912345678",
+  "firstName": "Primeiro",
+  "lastName": "Último",
+  "address": {
+    "street": "Rua",
+    "addressExtra": "Apartamento 1",
+    "city": "Cidade",
+    "postalCode": "1234-567",
+    "country": "País",
+  },
+  "nif": "123456789",
+  "paymentId": "123456789",
+  "status": [
+    {
+      "status": "Pago",
+      "date": "2021-07-23T15:00:00.000Z",
+    },
+  ],
+  "total": 1000,
+  "pdfUrl": "https://exemplo.com/fatura.pdf",
+  "createdAt": "2021-07-23T15:00:00.000Z",
+} </pre
+        >
+        <p>
+          Se a encomenda <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomenda não encontrada!' }</code>
+        <hr />
+        <h3>GET /orders/account</h3>
+        <p>Devolve uma lista de todas as encomendas de um utilizador.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <pre>
+[
+  {
+    "contactInfo": "912345678",
+    "firstName": "Primeiro",
+    "lastName": "Último",
+    "address": {
+      "street": "Rua",
+      "addressExtra": "Apartamento 1",
+      "city": "Cidade",
+      "postalCode": "1234-567",
+      "country": "País",
+    },
+    "nif": "123456789",
+    "paymentId": "123456789",
+    "status": [
+      {
+        "status": "Pago",
+        "date": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+    "total": 1000,
+    "pdfUrl": "https://exemplo.com/fatura.pdf",
+    "createdAt": "2021-07-23T15:00:00.000Z",
+    "orderData": [
+      {
+        "reference": "RTG4",
+        "name": "Produto",
+        "description": "Descrição do produto",
+        "category": "Calças",
+        "quantity": 1,
+        "priceAtTime": 1000,
+        "size": "M",
+        "image": "https://exemplo.com/imagem.jpg",
+        "createdAt": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+  },
+]</pre
+        >
+        <p>
+          Se <b>não existirem</b> encomendas, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomendas não encontradas!' }</code>
+        <p>
+          Se <b>não existirem</b> produtos associados à encomenda selecionada, o endpoint retorna um
+          <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'A encomenda não tem produtos associados!' }</code>
+        <hr />
+        <h3>GET /orders/search/:name</h3>
+        <p>Procura encomendas por nome de utilizador.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <pre>
+[
+  {
+    "accountId": "60f...c3",
+    "contactInfo": "912345678",
+    "firstName": "Primeiro",
+    "lastName": "Último",
+    "address": {
+      "street": "Rua",
+      "addressExtra": "Apartamento 1",
+      "city": "Cidade",
+      "postalCode": "1234-567",
+      "country": "País",
+    },
+    "nif": "123456789",
+    "paymentId": "123456789",
+    "status": [
+      {
+        "status": "Pago",
+        "date": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+    "total": 1000,
+    "pdfUrl": "https://exemplo.com/fatura.pdf",
+    "createdAt": "2021-07-23T15:00:00.000Z",
+    "orderData": [
+      {
+        "reference": "RTG4",
+        "name": "Produto",
+        "description": "Descrição do produto",
+        "category": "Calças",
+        "quantity": 1,
+        "priceAtTime": 1000,
+        "size": "M",
+        "image": "https://exemplo.com/imagem.jpg",
+        "createdAt": "2021-07-23T15:00:00.000Z",
+      },
+    ],
+  },
+]</pre
+        >
+        <p>
+          Se <b>não existirem</b> encomendas, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomendas não encontradas!' }</code>
+        <p>
+          Se <b>não existirem</b> produtos associados à encomenda selecionada, o endpoint retorna um
+          <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'A encomenda não tem produtos associados!' }</code>
+        <hr />
         <h3>POST /orders</h3>
         <p>Regista uma nova encomenda.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "paymentId": "123456789",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>
+          Se a encomenda for <b>adicionada</b>, o endpoint retorna o objeto <code>order</code> e a
+          mensagem abaixo:
+        </p>
+        <code>{ order: order, message: 'Encomenda registada com sucesso!' }</code>
+        <p>
+          Se <b>não existir paymentID</b>, o endpoint retorna um <b>erro 400</b> e uma mensagem:
+        </p>
+        <code>{ message: 'O ID do pagamento é obrigatório!' }</code>
+        <p>Se a conta <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:</p>
+        <code>{ message: 'Conta não encontrada!' }</code>
+        <p>
+          Se <b>não existirem</b> produtos no carrinho, o endpoint retorna um <b>erro 404</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'Carrinho vazio!' }</code>
+        <p>
+          Se algum campo <b>tiver vazio</b>, o endpoint retorna um <b>erro 400</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Todos os campos devem estar preenchidos!' }</code>
+        <p>
+          Se o produto de uma encomenda <b>não existir</b>, o endpoint retorna um <b>erro 409</b> e
+          uma mensagem:
+        </p>
+        <code
+          >{ message: 'O produto com a referência '${reference}' e tamanho '${size}' não existe!'
+          }</code
+        >
+        <p>
+          Se o produto de uma encomenda <b>não tiver stock suficiente</b>, o endpoint retorna um
+          <b>erro 409</b> e uma mensagem:
+        </p>
+        <code
+          >{ message: 'O produto com a referência '${reference}' e tamanho '${size}' não tem stock
+          suficiente!' }</code
+        >
+        <hr />
+        <h3>POST /orders/upload-pdf/:id</h3>
+        <p>Cria o PDF de uma encomenda.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>File</h4>
+        <p>Envie o PDF no formato <code>multipart/form-data</code>.</p>
+        <h4>Resposta</h4>
+        <p>Se o PDF for <b>criado</b>, o endpoint retorna o <code>URL</code> do pdf:</p>
+        <code>{ pdfUrl: 'https://exemplo.com/fatura.pdf' }'</code>
+        <p>
+          Se a encomenda <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomenda não encontrada!' }</code>
+        <p>
+          Se o pdf <b>não for enviado</b>, o endpoint retorna um <b>erro 400</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Erro ao ler o ficheiro.' }</code>
+        <hr />
         <h3>PUT /orders/:id</h3>
-        <p>Atualiza o estado de uma encomenda.</p>
+        <p>Atualiza os dados de uma encomenda.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <pre>
+{
+  "accountId": "60f...c3",
+  "productsIds": ["60f...c3", "60f...c3"],
+  "paymentId": "123456789",
+  "status": "Pago",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se a encomenda for <b>atualizada</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Encomenda atualizada com sucesso!' }</code>
+        <p>
+          Se a encomenda <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomenda não encontrada!' }</code>
+        <hr />
+        <h3>PUT /orders/status/:id</h3>
+        <p>Atualiza o estado de uma encomenda e envia um email ao cliente.</p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Body</h4>
+        <p>O <code>status</code> pode ser apenas um dos seguintes:</p>
+        <code>['Em processo', 'Pago', 'Enviado', 'Entregue', 'Cancelado']</code>
+        <pre>
+{
+  "status": "Pago",
+}
+</pre
+        >
+        <h4>Resposta</h4>
+        <p>Se o estado da encomenda for <b>atualizado</b>, o endpoint retorna a mensagem abaixo:</p>
+        <code>{ message: 'Estado da encomenda atualizado com sucesso!' }</code>
+        <p>
+          Se a encomenda <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomenda não encontrada!' }</code>
+        <p>
+          Se o estado enviado <b>for inválido</b>, o endpoint retorna um <b>erro 400</b> e uma
+          mensagem:
+        </p>
+        <code>{ message: 'Estado inválido!' }</code>
+        <hr />
         <h3>DELETE /orders/:id</h3>
         <p>Remove uma encomenda existente.</p>
+        <p><b>*Este endpoint não é utilizado na Loja Online ou Backoffice.*</b></p>
+        <p>*Este endpoint necessita de <code>header</code> com o <code>token</code> de acesso.</p>
+        <h4>Resposta</h4>
+        <p>
+          Se a encomenda <b>for removida</b>, o endpoint retorna a mensagem abaixo e a encomenda
+          removida:
+        </p>
+        <code>{ message: 'Encomenda removida com sucesso!' }</code>
+        <p>
+          Se a encomenda <b>não existir</b>, o endpoint retorna um <b>erro 404</b> e uma mensagem:
+        </p>
+        <code>{ message: 'Encomenda não encontrada!' }</code>
       </section>
     </main>
   </body>
