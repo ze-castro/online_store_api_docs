@@ -1,3 +1,6 @@
+### Disclaimer
+This project is a school assignment so the API is not online and running. The documentation was used to demonstrate the API's functionality and design for the assignment.
+
 # API Documentation
 Welcome to our API documentation! This API allows you to manage an online store, including products, categories, users, shopping carts and orders.
 
