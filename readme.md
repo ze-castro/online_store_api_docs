@@ -5,7 +5,7 @@ This project is a school assignment so the API is not online and running. The do
 Welcome to our API documentation! This API allows you to manage an online store, including products, categories, users, shopping carts and orders.
 
 ## 📚 Documentation
-Full API documentation is available at [our documentation page](https://zecastroipca.github.io/online_store_api_docs/).
+Full API documentation is available at [our documentation page](https://ze-castro.github.io/online_store_api_docs/).
 
 ## 🔑 Authentication
 Most endpoints require authentication using a JWT token. Include the token in the request header:
@@ -91,8 +91,8 @@ Example error response:
 - Valid Stripe account for payment processing
 
 ## 🔗 Links
-- [Terms of Service](https://zecastroipca.github.io/online_store_api_docs/service-terms)
-- [Privacy Policy](https://zecastroipca.github.io/online_store_api_docs/privacy-policy)
+- [Terms of Service](https://ze-castro.github.io/online_store_api_docs/service-terms)
+- [Privacy Policy](https://ze-castro.github.io/online_store_api_docs/privacy-policy)
 
 ## 👨‍💻 Contact
 This is just a school project, so we don't have a support team.
